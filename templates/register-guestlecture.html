@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guest Lecture Registration - Catalyst 2.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Racing+Sans+One&family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root { --f1-red: #FF1801; --electric-yellow: #FBFF00; --carbon: #0a0a0a; }
+        body { font-family: 'Rajdhani', sans-serif; background-color: var(--carbon); color: #ffffff; }
+        h1, h2, h3 { font-family: 'Racing Sans One', cursive; text-transform: uppercase; letter-spacing: 2px; }
+        .font-hud { font-family: 'Orbitron', sans-serif; }
+        .bg-carbon {
+            background-color: #111;
+            background-image: linear-gradient(45deg, #000 25%, transparent 25%, transparent 75%, #000 75%, #000), linear-gradient(45deg, #000 25%, transparent 25%, transparent 75%, #000 75%, #000);
+            background-size: 20px 20px; background-position: 0 0, 10px 10px;
+        }
+        .skew-fast { transform: skewX(-12deg); }
+        .not-skewed { transform: skewX(12deg); }
+        .form-input { width: 100%; background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(255, 255, 255, 0.2); padding: 12px 16px; color: white; font-family: 'Orbitron', sans-serif; font-size: 14px; transition: all 0.3s ease; outline: none; }
+        .form-input:focus { border-color: var(--electric-yellow); box-shadow: 0 0 10px rgba(251, 255, 0, 0.2); background: rgba(251, 255, 0, 0.05); }
+        .input-label { display: block; font-family: 'Orbitron', sans-serif; font-size: 12px; color: #888; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
+        .btn-yellow { background: linear-gradient(135deg, var(--electric-yellow) 0%, #b3b600 100%); color: black; position: relative; overflow: hidden; clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); transition: all 0.3s; text-transform: uppercase; font-family: 'Orbitron', sans-serif; font-weight: 900; }
+        .btn-yellow:hover { box-shadow: 0 0 30px rgba(251, 255, 0, 0.6); letter-spacing: 2px; }
+    </style>
+</head>
+<body class="bg-carbon min-h-screen flex flex-col">
+
+    <nav class="w-full py-4 border-b border-gray-800 bg-[#15151E]/90 backdrop-blur-md sticky top-0 z-50">
+        <div class="container mx-auto px-6 flex justify-between items-center">
+            <a href="{% url 'home' %}" class="flex items-center gap-2 group">
+                <div class="w-8 h-8 bg-[var(--electric-yellow)] skew-fast flex items-center justify-center hover:bg-white transition-colors">
+                    <span class="text-black group-hover:text-black font-bold not-skewed font-hud"><</span>
+                </div>
+                <span class="font-hud font-bold text-sm tracking-wider text-gray-400 group-hover:text-white transition-colors">BACK TO PADDOCK</span>
+            </a>
+            <div class="font-hud font-bold text-xl tracking-wider text-white">
+                CATALYST<span class="text-[var(--electric-yellow)]">2.0</span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow container mx-auto px-6 py-12 relative z-10">
+        <div class="text-center mb-12">
+            <span class="font-hud text-[var(--electric-yellow)] tracking-[0.2em] text-sm font-bold uppercase">Race Entry</span>
+            <h1 class="text-5xl md:text-6xl font-bold italic mt-2">SECURE YOUR <span class="text-[var(--electric-yellow)]">SPOT</span></h1>
+            <p class="text-gray-400 font-hud mt-4 max-w-2xl mx-auto">Reserve your seat for the Pit Wall Insights.</p>
+        </div>
+
+        <div class="max-w-3xl mx-auto bg-black/60 border border-[var(--electric-yellow)]/30 p-8 md:p-12 backdrop-blur-xl relative overflow-hidden">
+            <h3 class="text-2xl font-bold italic mb-8 border-b border-gray-800 pb-2 text-[var(--electric-yellow)]">GUEST LECTURE: ATTENDEE DETAILS</h3>
+            
+            <form action="{% url 'create_payment' %}" method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="event_type" value="Guest Lecture">
+                <input type="hidden" name="event_price" value="99">
+
+                <div class="grid md:grid-cols-2 gap-6 mb-8">
+                    <div>
+                        <label class="input-label">Full Name *</label>
+                        <input type="text" name="name" class="form-input skew-x-[-5deg]" required placeholder="Jane Doe">
+                    </div>
+                    <div>
+                        <label class="input-label">Email *</label>
+                        <input type="email" name="email" class="form-input skew-x-[-5deg]" required placeholder="email@university.edu">
+                    </div>
+                    <div>
+                        <label class="input-label">Phone *</label>
+                        <input type="tel" name="phone" class="form-input skew-x-[-5deg]" required placeholder="9876543210">
+                    </div>
+                    <div>
+                        <label class="input-label">College Name *</label>
+                        <input type="text" name="college" class="form-input skew-x-[-5deg]" required placeholder="Your College">
+                    </div>
+                    <div>
+                        <label class="input-label">Course / Branch *</label>
+                        <input type="text" name="course" class="form-input skew-x-[-5deg]" required placeholder="B.Tech CSE">
+                    </div>
+                    <div>
+                        <label class="input-label">Year *</label>
+                        <select name="year" class="form-input skew-x-[-5deg]" required>
+                            <option value="">Select Year</option>
+                            <option value="1st">1st Year</option>
+                            <option value="2nd">2nd Year</option>
+                            <option value="3rd">3rd Year</option>
+                            <option value="4th">4th Year</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="input-label">Gender *</label>
+                        <select name="gender" class="form-input skew-x-[-5deg]" required>
+                            <option value="">Select Gender</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="input-label">City *</label>
+                        <input type="text" name="city" class="form-input skew-x-[-5deg]" required placeholder="Your City">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-yellow w-full py-5 text-xl tracking-widest skew-x-[-5deg]">
+                    <span class="inline-block skew-x-[5deg]">PROCEED TO PAYMENT — ₹99</span>
+                </button>
+            </form>
+        </div>
+    </main>
+
+    <footer class="border-t border-white/10 py-6 mt-12 bg-[#0a0a0a]">
+        <div class="container mx-auto px-6 text-center font-hud text-xs text-gray-500"><p>CATALYST 2.0 // GUEST LECTURE</p></div>
+    </footer>
+</body>
+</html>
