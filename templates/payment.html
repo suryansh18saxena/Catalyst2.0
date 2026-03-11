@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment — Catalyst 2.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Racing+Sans+One&family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --f1-red: #FF1801; --neon-cyan: #00F0FF; --carbon: #0a0a0a; }
+        body { font-family: 'Rajdhani', sans-serif; background-color: var(--carbon); color: #fff; }
+        h1,h2,h3 { font-family: 'Racing Sans One', cursive; text-transform: uppercase; letter-spacing: 2px; }
+        .font-hud { font-family: 'Orbitron', sans-serif; }
+        .bg-carbon {
+            background-color: #111;
+            background-image: linear-gradient(45deg,#000 25%,transparent 25%,transparent 75%,#000 75%,#000),
+                              linear-gradient(45deg,#000 25%,transparent 25%,transparent 75%,#000 75%,#000);
+            background-size: 20px 20px; background-position: 0 0, 10px 10px;
+        }
+        .pulse-ring {
+            animation: pulseRing 2s ease-out infinite;
+        }
+        @keyframes pulseRing {
+            0%   { box-shadow: 0 0 0 0 rgba(255,24,1,0.6); }
+            70%  { box-shadow: 0 0 0 30px rgba(255,24,1,0); }
+            100% { box-shadow: 0 0 0 0 rgba(255,24,1,0); }
+        }
+    </style>
+</head>
+<body class="bg-carbon min-h-screen flex flex-col items-center justify-center p-6">
+
+    <div class="max-w-lg w-full bg-black/70 border border-white/10 backdrop-blur-xl p-10 text-center relative overflow-hidden rounded-sm">
+        <!-- Accent top bar -->
+        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--neon-cyan)] to-[var(--f1-red)]"></div>
+
+        <div class="mb-6">
+            <span class="font-hud text-[var(--f1-red)] tracking-[0.2em] text-xs font-bold uppercase">Pit Stop</span>
+            <h1 class="text-4xl md:text-5xl font-bold italic mt-2">PAYMENT<br><span class="text-[var(--f1-red)]">GATEWAY</span></h1>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mb-8 text-left">
+            <div class="p-3 bg-white/5 border border-white/10">
+                <div class="text-[10px] text-gray-500 font-hud uppercase">Driver</div>
+                <div class="text-sm font-bold truncate">{{ participant_name }}</div>
+            </div>
+            <div class="p-3 bg-white/5 border border-white/10">
+                <div class="text-[10px] text-gray-500 font-hud uppercase">Event</div>
+                <div class="text-sm font-bold truncate">{{ event_type }}</div>
+            </div>
+            <div class="p-3 bg-white/5 border border-white/10 col-span-2">
+                <div class="text-[10px] text-gray-500 font-hud uppercase">Amount</div>
+                <div class="text-2xl font-bold text-[var(--f1-red)] font-hud">₹{{ amount_inr }}</div>
+            </div>
+        </div>
+
+        <button id="pay-btn"
+                class="pulse-ring w-full py-5 text-xl tracking-widest font-hud font-black uppercase
+                       bg-gradient-to-r from-[var(--f1-red)] to-[#a80f00] text-white
+                       clip-path-[polygon(10px_0,100%_0,100%_calc(100%-10px),calc(100%-10px)_100%,0_100%,0_10px)]
+                       hover:shadow-[0_0_30px_rgba(255,24,1,0.6)] transition-all">
+            PAY NOW
+        </button>
+
+        <p class="mt-6 text-xs text-gray-600 font-hud">Secured by Razorpay · 256-bit SSL</p>
+    </div>
+
+    <!-- Razorpay Checkout Script -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script>
+        var options = {
+            "key": "{{ razorpay_key }}",
+            "amount": "{{ amount }}",
+            "currency": "{{ currency }}",
+            "name": "Catalyst 2.0",
+            "description": "{{ event_type }} Registration",
+            "order_id": "{{ razorpay_order_id }}",
+            "handler": function (response) {
+                // Create a hidden form and POST data to payment-success
+                var form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '{% url "payment_success" %}';
+
+                var fields = {
+                    'razorpay_payment_id': response.razorpay_payment_id,
+                    'razorpay_order_id': response.razorpay_order_id,
+                    'razorpay_signature': response.razorpay_signature
+                };
+
+                for (var key in fields) {
+                    var input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = key;
+                    input.value = fields[key];
+                    form.appendChild(input);
+                }
+
+                document.body.appendChild(form);
+                form.submit();
+            },
+            "prefill": {
+                "name": "{{ participant_name }}",
+                "email": "{{ participant_email }}",
+                "contact": "{{ participant_phone }}"
+            },
+            "theme": {
+                "color": "#FF1801"
+            }
+        };
+
+        var rzp = new Razorpay(options);
+
+        document.getElementById('pay-btn').addEventListener('click', function (e) {
+            rzp.open();
+            e.preventDefault();
+        });
+
+        // Auto-open payment modal
+        window.addEventListener('load', function () {
+            setTimeout(function () { rzp.open(); }, 600);
+        });
+    </script>
+</body>
+</html>
