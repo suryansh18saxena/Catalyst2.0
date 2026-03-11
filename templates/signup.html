@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up — Catalyst 2.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Racing+Sans+One&family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --f1-red: #FF1801; --neon-cyan: #00F0FF; --carbon: #0a0a0a; }
+        body { font-family: 'Rajdhani', sans-serif; background-color: var(--carbon); color: #fff; }
+        h1,h2,h3 { font-family: 'Racing Sans One', cursive; text-transform: uppercase; letter-spacing: 2px; }
+        .font-hud { font-family: 'Orbitron', sans-serif; }
+        .bg-carbon {
+            background-color: #111;
+            background-image: linear-gradient(45deg,#000 25%,transparent 25%,transparent 75%,#000 75%,#000),
+                              linear-gradient(45deg,#000 25%,transparent 25%,transparent 75%,#000 75%,#000);
+            background-size: 20px 20px; background-position: 0 0, 10px 10px;
+        }
+        .form-input { width:100%; background:rgba(0,0,0,0.6); border:1px solid rgba(255,255,255,0.2); padding:14px 18px; color:#fff; font-family:'Orbitron',sans-serif; font-size:14px; transition:all 0.3s; outline:none; }
+        .form-input:focus { border-color:var(--neon-cyan); box-shadow:0 0 15px rgba(0,240,255,0.25); background:rgba(0,240,255,0.04); }
+        .form-input::placeholder { color:#555; }
+        .input-label { display:block; font-family:'Orbitron',sans-serif; font-size:11px; color:#888; margin-bottom:8px; text-transform:uppercase; letter-spacing:1.5px; }
+        .btn-cyan { background:linear-gradient(135deg,var(--neon-cyan) 0%,#008b99 100%); color:#000; overflow:hidden; clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px); transition:all 0.3s; text-transform:uppercase; font-family:'Orbitron',sans-serif; font-weight:900; cursor:pointer; }
+        .btn-cyan:hover { box-shadow:0 0 30px rgba(0,240,255,0.6); letter-spacing:2px; }
+        .skew-fast { transform:skewX(-12deg); }
+        .not-skewed { transform:skewX(12deg); }
+        .text-combo { background:linear-gradient(90deg,#00F0FF,#FF1801); -webkit-background-clip:text; -webkit-text-fill-color:transparent; display:inline-block; }
+        @keyframes fadeInUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+        .animate-in { animation: fadeInUp 0.7s ease-out forwards; }
+    </style>
+</head>
+<body class="bg-carbon min-h-screen flex flex-col items-center justify-center p-6">
+
+    <div class="max-w-md w-full animate-in">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <a href="{% url 'home' %}" class="font-hud font-bold text-2xl tracking-wider text-white inline-block mb-4">
+                CATALYST<span class="text-combo">2.0</span>
+            </a>
+            <h1 class="text-4xl md:text-5xl font-bold italic">JOIN THE <span class="text-[var(--neon-cyan)]">GRID</span></h1>
+            <p class="text-gray-500 font-hud text-xs mt-3 tracking-wider">CREATE YOUR DRIVER PROFILE</p>
+        </div>
+
+        <!-- Error Messages -->
+        {% if messages %}
+        <div class="mb-6">
+            {% for message in messages %}
+            <div class="p-3 bg-red-500/20 border border-red-500/50 text-red-300 font-hud text-xs tracking-wider text-center">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Signup Card -->
+        <div class="bg-black/70 border border-white/10 backdrop-blur-xl p-8 relative overflow-hidden">
+            <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--neon-cyan)] to-[var(--f1-red)]"></div>
+
+            <form method="POST" action="{% url 'signup' %}">
+                {% csrf_token %}
+
+                <div class="mb-5">
+                    <label class="input-label">Username</label>
+                    <input type="text" name="username" class="form-input" required placeholder="Choose a username" autofocus>
+                </div>
+
+                <div class="mb-5">
+                    <label class="input-label">Email</label>
+                    <input type="email" name="email" class="form-input" required placeholder="you@example.com">
+                </div>
+
+                <div class="mb-5">
+                    <label class="input-label">Password</label>
+                    <input type="password" name="password" class="form-input" required placeholder="Min. 6 characters">
+                </div>
+
+                <div class="mb-8">
+                    <label class="input-label">Confirm Password</label>
+                    <input type="password" name="password2" class="form-input" required placeholder="Re-enter password">
+                </div>
+
+                <button type="submit" class="btn-cyan w-full py-4 text-lg tracking-widest">
+                    CREATE ACCOUNT
+                </button>
+            </form>
+
+            <div class="mt-6 text-center">
+                <span class="text-gray-500 font-hud text-xs">Already have an account?</span>
+                <a href="{% url 'login' %}" class="text-[var(--neon-cyan)] font-hud text-xs font-bold tracking-wider hover:text-white transition-colors ml-1 uppercase">
+                    Login →
+                </a>
+            </div>
+        </div>
+
+        <!-- Back link -->
+        <div class="text-center mt-6">
+            <a href="{% url 'home' %}" class="font-hud text-xs text-gray-600 hover:text-white transition-colors uppercase tracking-wider">
+                ← Back to Paddock
+            </a>
+        </div>
+    </div>
+</body>
+</html>
