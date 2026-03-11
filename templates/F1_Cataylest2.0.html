@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catalyst 2.0 - Lights Out & Away We Go</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Racing+Sans+One&family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --f1-red: #FF1801;
+            --asphalt: #15151E;
+            --carbon: #0a0a0a;
+            --neon-cyan: #00F0FF;
+            --track-grey: #2b2b2b;
+            --electric-yellow: #FBFF00;
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background-color: var(--carbon);
+            color: #ffffff;
+            overflow-x: hidden;
+            cursor: crosshair;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Racing Sans One', cursive;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .font-hud {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* Carbon Fiber Background Pattern */
+        .bg-carbon {
+            background-color: #111;
+            background-image: 
+                linear-gradient(45deg, #000 25%, transparent 25%, transparent 75%, #000 75%, #000),
+                linear-gradient(45deg, #000 25%, transparent 25%, transparent 75%, #000 75%, #000);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+        }
+
+        /* Speed Lines Background */
+        .speed-lines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: repeating-linear-gradient(90deg, transparent 0, transparent 50px, rgba(255, 255, 255, 0.03) 50px, rgba(255, 255, 255, 0.03) 51px);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Skew Effect for Speed */
+        .skew-fast {
+            transform: skewX(-12deg);
+        }
+        .not-skewed {
+            transform: skewX(12deg);
+        }
+
+        /* Neon Borders & Cards */
+        .telemetry-card {
+            background: rgba(21, 21, 30, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            clip-path: polygon(10% 0, 100% 0, 100% 90%, 90% 100%, 0 100%, 0 10%);
+        }
+
+        .telemetry-card:hover {
+            border-color: var(--f1-red);
+            box-shadow: 0 0 20px rgba(255, 24, 1, 0.3);
+            transform: translateY(-5px) scale(1.02);
+        }
+        
+        .telemetry-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--f1-red);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .telemetry-card:hover::before {
+            opacity: 1;
+        }
+
+        /* --- METALLIC FONT STYLE --- */
+        .chrome-text {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            font-style: italic;
+            text-transform: uppercase;
+            background: linear-gradient(to bottom, #ffffff 0%, #dcdcdc 30%, #8c8c8c 50%, #dcdcdc 51%, #ffffff 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            color: transparent;
+            filter: drop-shadow(0px 0px 0px rgba(0,0,0,1));
+            position: relative;
+            letter-spacing: -0.02em;
+            line-height: 1;
+        }
+
+        .chrome-wrapper { position: relative; display: inline-block; }
+        
+        /* THE COMBO SHADE: Cyan to Red Gradient Glow */
+        .chrome-wrapper::after {
+            content: ''; 
+            position: absolute; 
+            left: 0; 
+            right: 0; 
+            bottom: 5px; 
+            height: 2px;
+            background: linear-gradient(90deg, #00F0FF, #FF1801); 
+            box-shadow: 0 0 15px #00F0FF, 0 0 30px #FF1801; 
+            opacity: 0.9; 
+            z-index: -1;
+        }
+        
+        .chrome-stroke {
+            position: absolute; top: 0; left: 0; z-index: -1; width: 100%; height: 100%;
+            font-family: 'Orbitron', sans-serif; font-weight: 900; font-style: italic; text-transform: uppercase;
+            background: linear-gradient(to bottom, #4a4a4a, #000); -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent; -webkit-text-stroke: 6px rgba(255,255,255,0.1); transform: translateY(2px);
+            line-height: 1;
+        }
+
+        /* Custom Class for Cyan-Red Gradient Text */
+        .text-combo {
+            background: linear-gradient(90deg, #00F0FF, #FF1801);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+        }
+
+        /* Custom Class for Cyan-Red Gradient Backgrounds (Lines) */
+        .bg-combo {
+            background: linear-gradient(90deg, #00F0FF, #FF1801);
+        }
+
+        /* Button Styles */
+        .btn-race {
+            background: linear-gradient(135deg, var(--f1-red) 0%, #a80f00 100%);
+            color: white;
+            position: relative;
+            overflow: hidden;
+            clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+            transition: all 0.3s;
+            text-transform: uppercase;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+        }
+
+        .btn-race:hover {
+            box-shadow: 0 0 30px rgba(255, 24, 1, 0.6);
+            letter-spacing: 2px;
+        }
+
+        /* PRELOADER START LIGHTS */
+        #preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .loader-lights-container {
+            display: flex;
+            gap: 15px;
+            padding: 20px;
+            background: #111;
+            border-radius: 10px;
+            border: 1px solid #333;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+        }
+
+        .loader-light {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #333;
+            border: 2px solid #555;
+            transition: background 0.1s;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--asphalt); }
+        ::-webkit-scrollbar-thumb { background: var(--f1-red); border-radius: 0; }
+
+        .hero-clip {
+             clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%);
+             transform-origin: center;
+        }
+        
+        /* Utility for GSAP Visibility */
+        .gsap-reveal {
+            opacity: 0; /* Initially hidden */
+        }
+    </style>
+</head>
+<body class="bg-carbon">
+
+    <div id="preloader">
+        <div class="loader-lights-container">
+            <div class="loader-light"></div>
+            <div class="loader-light"></div>
+            <div class="loader-light"></div>
+            <div class="loader-light"></div>
+            <div class="loader-light"></div>
+        </div>
+        <div class="mt-8 font-hud text-gray-500 text-sm tracking-[0.5em] animate-pulse">INITIALIZING SYSTEMS...</div>
+    </div>
+
+    <div class="speed-lines"></div>
+
+    <nav id="navbar" class="fixed top-0 left-0 right-0 z-50 py-4 transition-all duration-300 border-b border-transparent">
+        <div class="container mx-auto px-6">
+            <div class="flex justify-between items-center bg-[#15151E]/90 backdrop-blur-md px-6 py-3 rounded-br-2xl rounded-tl-2xl border border-gray-800">
+                <a href="#" class="flex items-center gap-2 group">
+                    <div class="w-8 h-8 bg-[var(--f1-red)] skew-fast flex items-center justify-center">
+                        <span class="text-white font-bold not-skewed font-hud">CB</span>
+                    </div>
+                    <span class="font-hud font-bold text-xl tracking-wider text-white group-hover:text-[var(--f1-red)] transition-colors">CATALYST<span class="text-combo">2.0</span></span>
+                </a>
+                
+                <div class="hidden md:flex items-center gap-8 font-hud text-sm tracking-widest">
+                    <a href="#about" class="text-gray-400 hover:text-white hover:skew-x-[-10deg] transition-all">PADDOCK</a>
+                    <a href="#events" class="text-gray-400 hover:text-white hover:skew-x-[-10deg] transition-all">CIRCUITS</a>
+                    <a href="#main-event" class="text-[var(--electric-yellow)] hover:text-white hover:skew-x-[-10deg] transition-all font-bold">OPEN SOURCE</a>
+                    <a href="#prizes" class="text-gray-400 hover:text-white hover:skew-x-[-10deg] transition-all">PODIUM</a>
+                    {% if user.is_authenticated %}
+                    {% if my_ticket %}
+                    <a href="{% url 'ticket_view' my_ticket.ticket_id %}" class="px-5 py-2 text-xs bg-green-500/20 border border-green-500 text-green-400 hover:bg-green-500 hover:text-black transition-all font-bold tracking-wider">
+                        🎟 MY TICKET
+                    </a>
+                    {% endif %}
+                    <span class="text-[var(--neon-cyan)] text-xs">{{ user.username }}</span>
+                    <a href="{% url 'logout' %}" class="text-gray-400 hover:text-[var(--f1-red)] hover:skew-x-[-10deg] transition-all text-xs">LOGOUT</a>
+                    {% else %}
+                    <a href="{% url 'login' %}" class="text-gray-400 hover:text-white hover:skew-x-[-10deg] transition-all">LOGIN</a>
+                    <a href="{% url 'signup' %}" class="btn-race px-6 py-2 text-xs">
+                        Sign Up
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <section class="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden hero-clip bg-[url('https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center bg-no-repeat bg-fixed">
+        <div class="absolute inset-0 bg-black/70 bg-gradient-to-t from-black via-black/80 to-transparent"></div>
+        
+        <div class="container mx-auto px-6 relative z-10 text-center">
+            
+            <div class="flex items-center justify-center gap-3 mb-8 reveal-hero">
+                <span class="h-px w-12 bg-combo"></span>
+                <span class="font-hud text-sm uppercase tracking-[0.3em] text-combo font-bold">Code Busters Presents</span>
+                <span class="h-px w-12 bg-combo"></span>
+            </div>
+
+            <div class="mb-8 relative z-20 reveal-hero">
+                <div class="chrome-wrapper">
+                    <span class="chrome-stroke block text-6xl md:text-8xl lg:text-9xl">CATALYST 2.0</span>
+                    <h1 class="chrome-text block text-6xl md:text-8xl lg:text-9xl">CATALYST 2.0</h1>
+                </div>
+            </div>
+            
+            <p class="text-xl md:text-2xl text-gray-400 font-hud mb-10 tracking-wide reveal-hero">
+                Two Days. Infinite Possibilities. <span class="text-white italic">Accelerate Your Future.</span>
+            </p>
+
+            <div class="text-center mb-4 relative z-20">
+    <span class="font-hud text-[var(--f1-red)] tracking-[0.2em] text-sm font-bold uppercase">Event Starts In</span>
+</div>
+<div id="countdown" class="flex flex-wrap justify-center gap-4 md:gap-6 mb-12 relative z-20">
+    <div class="w-20 md:w-24 py-4 rounded-sm text-center bg-black/60 border border-white/10 backdrop-blur-md skew-x-[-10deg]">
+        <div id="days" class="font-hud text-3xl md:text-4xl font-bold text-white not-skewed skew-x-[10deg]">00</div>
+        <div class="font-hud text-[10px] uppercase tracking-wider text-[var(--f1-red)] not-skewed skew-x-[10deg]">Days</div>
+    </div>
+    <div class="w-20 md:w-24 py-4 rounded-sm text-center bg-black/60 border border-white/10 backdrop-blur-md skew-x-[-10deg]">
+        <div id="hours" class="font-hud text-3xl md:text-4xl font-bold text-white not-skewed skew-x-[10deg]">00</div>
+        <div class="font-hud text-[10px] uppercase tracking-wider text-[var(--f1-red)] not-skewed skew-x-[10deg]">Hours</div>
+    </div>
+    <div class="w-20 md:w-24 py-4 rounded-sm text-center bg-black/60 border border-white/10 backdrop-blur-md skew-x-[-10deg]">
+        <div id="minutes" class="font-hud text-3xl md:text-4xl font-bold text-white not-skewed skew-x-[10deg]">00</div>
+        <div class="font-hud text-[10px] uppercase tracking-wider text-[var(--f1-red)] not-skewed skew-x-[10deg]">Mins</div>
+    </div>
+    <div class="w-20 md:w-24 py-4 rounded-sm text-center bg-black/60 border border-white/10 backdrop-blur-md skew-x-[-10deg]">
+        <div id="seconds" class="font-hud text-3xl md:text-4xl font-bold text-white not-skewed skew-x-[10deg]">00</div>
+        <div class="font-hud text-[10px] uppercase tracking-wider text-[var(--f1-red)] not-skewed skew-x-[10deg]">Secs</div>
+    </div>
+</div>
+
+            <div class="flex flex-col sm:flex-row gap-6 justify-center items-center mt-8 reveal-hero">
+                <a href="#events" class="btn-race px-10 py-5 text-xl tracking-widest group">
+                    REGISTER NOW
+                </a>
+                <a href="#schedule" class="px-8 py-4 border border-white/20 text-white hover:border-[var(--f1-red)] hover:bg-[var(--f1-red)]/10 transition-all skew-x-[-10deg] font-hud tracking-widest uppercase group">
+                    <span class="inline-block skew-x-[10deg] flex items-center gap-2"><span class="text-combo">►</span> VIEW SCHEDULE</span>
+                </a>
+            </div>
+
+<div class="grid grid-cols-3 gap-4 max-w-3xl mx-auto mt-12 p-2 border-t border-white/10 bg-black/40 backdrop-blur-md relative z-20">
+    <div class="p-2 border-r border-white/10">
+        <div class="text-xl font-bold font-hud text-[var(--f1-red)]">2 Days</div>
+    </div>
+    <div class="p-2 border-r border-white/10">
+        <div class="text-xl font-bold font-hud text-combo">3 Events</div>
+    </div>
+</div>
+        </div>
+    </section>
+
+    <section id="about" class="py-32 relative bg-[var(--asphalt)]">
+        <div class="absolute right-0 top-0 h-full w-1/3 opacity-10" style="background: repeating-linear-gradient(45deg, #000, #000 10px, transparent 10px, transparent 20px);"></div>
+
+        <div class="container mx-auto px-6 relative z-10">
+            <div class="grid md:grid-cols-2 gap-20 items-center">
+                <div class="gsap-reveal">
+                    <div class="text-sm font-bold text-[var(--f1-red)] mb-2 tracking-[0.2em] font-hud">THE PADDOCK</div>
+                    <h2 class="text-5xl md:text-7xl font-bold mb-8 italic">ENGINEERING <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-500">EXCELLENCE</span></h2>
+                    <p class="text-gray-400 text-lg mb-6 font-hud leading-relaxed border-l-4 border-[var(--f1-red)] pl-6">
+                        Catalyst is the ultimate Grand Prix for tech enthusiasts. It's not just code; it's about aerodynamics of thought and the speed of execution.
+                    </p>
+                    <div class="grid grid-cols-2 gap-4 mt-8">
+                        <div class="bg-black/50 p-4 border border-gray-800">
+                            <h4 class="font-hud text-combo text-xl mb-1">0-100</h4>
+                            <p class="text-xs text-gray-500 uppercase">Skill Acceleration</p>
+                        </div>
+                        <div class="bg-black/50 p-4 border border-gray-800">
+                            <h4 class="font-hud text-[var(--f1-red)] text-xl mb-1">G-FORCE</h4>
+                            <p class="text-xs text-gray-500 uppercase">High Pressure Dev</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 gap-6">
+                    <div class="telemetry-card p-6 flex items-start gap-4 hover:skew-x-[-2deg] gsap-reveal">
+                        <div class="w-12 h-12 bg-[var(--f1-red)]/20 flex items-center justify-center text-[var(--f1-red)] rounded border border-[var(--f1-red)]">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-xl text-white font-bold italic">Innovation Hub</h3>
+                            <p class="text-sm font-hud text-gray-400">Hands-on development workshops.</p>
+                        </div>
+                    </div>
+                    <div class="telemetry-card p-6 flex items-start gap-4 hover:skew-x-[-2deg] gsap-reveal">
+                        <div class="w-12 h-12 bg-[var(--neon-cyan)]/20 flex items-center justify-center text-[var(--neon-cyan)] rounded border border-[var(--neon-cyan)]">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-xl text-white font-bold italic">Collaboration</h3>
+                            <p class="text-sm font-hud text-gray-400">Team up with like-minded innovators.</p>
+                        </div>
+                    </div>
+                    <div class="telemetry-card p-6 flex items-start gap-4 hover:skew-x-[-2deg] gsap-reveal">
+                        <div class="w-12 h-12 bg-yellow-400/20 flex items-center justify-center text-yellow-400 rounded border border-yellow-400">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-xl text-white font-bold italic">Open Source</h3>
+                            <p class="text-sm font-hud text-gray-400">Dive into real-world open source projects.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="events" class="py-32 relative bg-black">
+        <div class="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
+        
+        <div class="container mx-auto px-6 relative z-10">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-20 gsap-reveal">
+                <div>
+                    <div class="text-sm font-bold text-combo mb-2 tracking-[0.2em] font-hud">RACE CALENDAR</div>
+                    <h2 class="text-5xl md:text-7xl font-bold italic">SELECT YOUR <span class="text-[var(--f1-red)]">CIRCUIT</span></h2>
+                </div>
+                <div class="font-hud text-right hidden md:block">
+                    <div class="text-xs text-gray-500">TRACK TEMP</div>
+                    <div class="text-xl text-[var(--f1-red)] font-bold">42°C HOT</div>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="telemetry-card p-8 group gsap-reveal">
+                    <div class="flex justify-between items-start mb-6">
+                        <div class="text-4xl font-black text-gray-800 group-hover:text-white transition-colors">01</div>
+                        <div class="w-2 h-2 bg-[var(--f1-red)] rounded-full animate-pulse"></div>
+                    </div>
+                    <h3 class="text-3xl font-bold mb-4 italic group-hover:translate-x-2 transition-transform">Open Source</h3>
+                    <div class="h-1 w-12 bg-[var(--f1-red)] mb-4"></div>
+                    <p class="font-hud text-gray-400 text-sm mb-6">The main event. Contribute to real-world projects and build the ultimate codebase. Fastest merges take pole position.</p>
+                    <a href="{% url 'register_opensource' %}" class="text-[var(--f1-red)] font-hud text-sm font-bold uppercase tracking-wider flex items-center gap-2">Register Now >></a>
+                </div>
+
+                <div class="telemetry-card p-8 group gsap-reveal">
+                    <div class="flex justify-between items-start mb-6">
+                        <div class="text-4xl font-black text-gray-800 group-hover:text-white transition-colors">02</div>
+                        <div class="w-2 h-2 bg-[var(--neon-cyan)] rounded-full animate-pulse"></div>
+                    </div>
+                    <h3 class="text-3xl font-bold mb-4 italic group-hover:translate-x-2 transition-transform">Prompthanon</h3>
+                    <div class="h-1 w-12 bg-combo mb-4"></div>
+                    <p class="font-hud text-gray-400 text-sm mb-6">AI Prompting Challenge. Craft the perfect prompts to navigate through complex logic puzzles.</p>
+                    <a href="{% url 'register_promptathon' %}" class="text-combo font-hud text-sm font-bold uppercase tracking-wider flex items-center gap-2">Register Now >></a>
+                </div>
+
+                <div class="telemetry-card p-8 group gsap-reveal">
+                    <div class="flex justify-between items-start mb-6">
+                        <div class="text-4xl font-black text-gray-800 group-hover:text-white transition-colors">03</div>
+                        <div class="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+                    </div>
+                    <h3 class="text-3xl font-bold mb-4 italic group-hover:translate-x-2 transition-transform">Guest Lecture</h3>
+                    <div class="h-1 w-12 bg-yellow-400 mb-4"></div>
+                    <p class="font-hud text-gray-400 text-sm mb-6">Insights from the Pit Wall. Learn from industry veterans about the future of tech and open source.</p>
+                    <a href="{% url 'register_guestlecture' %}" class="text-yellow-400 font-hud text-sm font-bold uppercase tracking-wider flex items-center gap-2">Register Now >></a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="main-event" class="py-32 relative bg-[#050505] overflow-hidden border-y border-gray-900">
+        <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2070')] bg-cover bg-center opacity-10 mix-blend-luminosity"></div>
+        <div class="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent"></div>
+
+        <div class="container mx-auto px-6 relative z-10">
+            <div class="grid lg:grid-cols-2 gap-16 items-center">
+                <div class="gsap-reveal">
+                    <div class="inline-block px-4 py-1 bg-yellow-500/20 border border-yellow-500 text-yellow-500 font-hud text-xs tracking-[0.2em] mb-4 skew-fast">
+                        <span class="not-skewed">MAIN EVENT</span>
+                    </div>
+                    <h2 class="text-5xl md:text-7xl font-bold italic mb-6">OPEN <span class="text-yellow-500">SOURCE</span></h2>
+                    <p class="text-lg text-gray-400 mb-8 font-hud leading-relaxed">
+                        The ultimate contribution sprint. Dive into the world of open source, collaborate with top developers, and build the future. Only the most impactful code will take the win.
+                    </p>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-8">
+                        <div class="p-4 bg-[#1a1a1a] border-l-2 border-yellow-500">
+                            <div class="text-xs text-gray-500 font-hud uppercase tracking-wider">TEAM SIZE</div>
+                            <div class="text-2xl font-bold text-white">1-4 Devs</div>
+                        </div>
+                        <div class="p-4 bg-[#1a1a1a] border-l-2 border-yellow-500">
+                            <div class="text-xs text-gray-500 font-hud uppercase tracking-wider">PRIZE POOL</div>
+                            <div class="text-2xl font-bold text-yellow-500">₹22,000</div>
+                        </div>
+                    </div>
+                    <a href="{% url 'register_opensource' %}" class="btn-race bg-gradient-to-r from-yellow-600 to-yellow-500 px-8 py-4 skew-x-[-10deg] text-black font-black inline-block">
+                        <span class="inline-block skew-x-[10deg]">REGISTER TEAM</span>
+                    </a>
+                </div>
+                
+                <div class="relative gsap-reveal">
+                    <div class="telemetry-card p-8 border-yellow-500/30">
+                        <h3 class="text-2xl font-bold text-white mb-6 italic">SPRINT SCHEDULE</h3>
+                        <div class="space-y-4 font-hud">
+                            <div class="flex items-center gap-4 p-4 bg-white/5 rounded border border-white/10">
+                                <div class="text-yellow-500 font-bold text-xl">01</div>
+                                <div class="flex-1">
+                                    <h4 class="text-white font-bold">Registration Opens</h4>
+                                    <p class="text-xs text-gray-500">Day 1 - 09:00 IST</p>
+                                </div>
+                                <span class="text-[10px] bg-yellow-500/20 text-yellow-500 px-2 py-1">UPCOMING</span>
+                            </div>
+                            <div class="flex items-center gap-4 p-4 bg-white/5 rounded border border-white/10">
+                                <div class="text-gray-500 font-bold text-xl">02</div>
+                                <div class="flex-1">
+                                    <h4 class="text-gray-300 font-bold">Contribution Window</h4>
+                                    <p class="text-xs text-gray-500">Day 2 - 10:00 IST</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-4 p-4 bg-white/5 rounded border border-white/10">
+                                <div class="text-gray-500 font-bold text-xl">03</div>
+                                <div class="flex-1">
+                                    <h4 class="text-gray-300 font-bold">Final Code Merge</h4>
+                                    <p class="text-xs text-gray-500">Day 3 - 12:00 IST</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="schedule" class="py-32 relative bg-[var(--asphalt)]">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-20 gsap-reveal">
+                <div class="text-sm font-bold text-[var(--f1-red)] mb-2 tracking-[0.2em] font-hud">SESSION TIMES</div>
+                <h2 class="text-5xl md:text-7xl font-bold italic">RACE <span class="text-white">WEEKEND</span></h2>
+            </div>
+
+            <div class="max-w-4xl mx-auto relative">
+                <div class="absolute left-[19px] top-0 bottom-0 w-1 bg-gray-800"></div>
+                <div class="absolute left-[19px] top-0 bottom-0 w-1 bg-[var(--f1-red)] origin-top scale-y-0" id="progress-line"></div>
+
+                <div class="relative pl-12 mb-16 schedule-item gsap-reveal">
+                    <div class="absolute left-0 top-0 w-10 h-10 bg-[var(--asphalt)] border-2 border-[var(--f1-red)] rounded-full flex items-center justify-center font-bold text-[var(--f1-red)] z-10 font-hud text-xs">FP1</div>
+                    <div class="bg-black/40 border-l-4 border-[var(--f1-red)] p-6 hover:bg-black/60 transition-all skew-x-[-6deg] ml-4">
+                        <div class="skew-x-[6deg]">
+                            <div class="flex justify-between items-center mb-2 border-b border-gray-800 pb-2">
+                                <h3 class="text-2xl font-bold italic">Day 1: Practice & Quali</h3>
+                                <span class="font-hud text-[var(--f1-red)]">Jan 15</span>
+                            </div>
+                            <ul class="space-y-3 font-hud text-sm text-gray-400">
+                                <li class="flex gap-4"><span class="text-white font-bold">[09:00]</span> Registration & Scrutineering</li>
+                                <li class="flex gap-4"><span class="text-white font-bold">[10:00]</span> Opening Ceremony</li>
+                                <li class="flex gap-4"><span class="text-white font-bold">[11:00]</span> Guest Lecture (Pit Stop)</li>
+                                <li class="flex gap-4"><span class="text-white font-bold">[12:00]</span> Open Source: Lights Out</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="relative pl-12 mb-16 schedule-item gsap-reveal">
+                    <div class="absolute left-0 top-0 w-10 h-10 bg-[var(--asphalt)] border-2 border-[var(--neon-cyan)] rounded-full flex items-center justify-center font-bold text-[var(--neon-cyan)] z-10 font-hud text-xs">Q2</div>
+                    <div class="bg-black/40 border-l-4 border-[var(--neon-cyan)] p-6 hover:bg-black/60 transition-all skew-x-[-6deg] ml-4">
+                         <div class="skew-x-[6deg]">
+                            <div class="flex justify-between items-center mb-2 border-b border-gray-800 pb-2">
+                                <h3 class="text-2xl font-bold italic">Day 2: The Sprint</h3>
+                                <span class="font-hud text-[var(--neon-cyan)]">Jan 16</span>
+                            </div>
+                            <ul class="space-y-3 font-hud text-sm text-gray-400">
+                                <li class="flex gap-4"><span class="text-white font-bold">[10:00]</span> Prompthanon Starts</li>
+                                <li class="flex gap-4"><span class="text-white font-bold">[14:00]</span> Open Source Sprint</li>
+                                <li class="flex gap-4"><span class="text-white font-bold">[18:00]</span> Prompthanon Finals</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="relative pl-12 schedule-item gsap-reveal">
+                    <div class="absolute left-0 top-0 w-10 h-10 bg-[var(--asphalt)] border-2 border-yellow-400 rounded-full flex items-center justify-center font-bold text-yellow-400 z-10 font-hud text-xs">GP</div>
+                    <div class="bg-black/40 border-l-4 border-yellow-400 p-6 hover:bg-black/60 transition-all skew-x-[-6deg] ml-4">
+                        <div class="skew-x-[6deg]">
+                            <div class="flex justify-between items-center mb-2 border-b border-gray-800 pb-2">
+                                <h3 class="text-2xl font-bold italic">Day 3: Main Race</h3>
+                                <span class="font-hud text-yellow-400">Jan 17</span>
+                            </div>
+                            <ul class="space-y-3 font-hud text-sm text-gray-400">
+                                <li class="flex gap-4"><span class="text-white font-bold">[12:00]</span> Chequered Flag (All Events End)</li>
+                                <li class="flex gap-4"><span class="text-white font-bold">[14:00]</span> Stewards Inquiry (Judging)</li>
+                                <li class="flex gap-4"><span class="text-white font-bold">[16:00]</span> Podium Ceremony</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="mentorship" class="py-24 bg-black relative">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,240,255,0.05)_0%,transparent_70%)]"></div>
+        <div class="container mx-auto px-6 relative z-10">
+            <div class="text-center mb-16 gsap-reveal">
+                <span class="font-hud text-combo tracking-widest text-sm">RACE OFFICIALS</span>
+                <h2 class="text-4xl md:text-5xl font-bold italic mt-2">JUDGING <span class="text-white">CRITERIA</span></h2>
+            </div>
+            
+            <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                <div class="telemetry-card p-6 gsap-reveal">
+                    <div class="flex justify-between items-end mb-2">
+                        <h4 class="text-xl font-bold text-white">Innovation</h4>
+                        <span class="text-2xl font-bold text-[var(--f1-red)] font-hud">30%</span>
+                    </div>
+                    <div class="w-full h-2 bg-gray-800 rounded-full overflow-hidden">
+                        <div class="h-full bg-[var(--f1-red)]" style="width: 30%"></div>
+                    </div>
+                    <p class="mt-2 text-sm text-gray-500 font-hud">Originality and creativity of the technical solution.</p>
+                </div>
+
+                <div class="telemetry-card p-6 gsap-reveal">
+                    <div class="flex justify-between items-end mb-2">
+                        <h4 class="text-xl font-bold text-white">Functionality</h4>
+                        <span class="text-2xl font-bold text-combo font-hud">25%</span>
+                    </div>
+                    <div class="w-full h-2 bg-gray-800 rounded-full overflow-hidden">
+                        <div class="h-full bg-combo" style="width: 25%"></div>
+                    </div>
+                    <p class="mt-2 text-sm text-gray-500 font-hud">Code quality, bug-free execution, and feature completeness.</p>
+                </div>
+
+                <div class="telemetry-card p-6 gsap-reveal">
+                    <div class="flex justify-between items-end mb-2">
+                        <h4 class="text-xl font-bold text-white">Presentation</h4>
+                        <span class="text-2xl font-bold text-yellow-400 font-hud">20%</span>
+                    </div>
+                    <div class="w-full h-2 bg-gray-800 rounded-full overflow-hidden">
+                        <div class="h-full bg-yellow-400" style="width: 20%"></div>
+                    </div>
+                    <p class="mt-2 text-sm text-gray-500 font-hud">Clarity of pitch, demo quality, and Q&A handling.</p>
+                </div>
+
+                <div class="telemetry-card p-6 gsap-reveal">
+                    <div class="flex justify-between items-end mb-2">
+                        <h4 class="text-xl font-bold text-white">Impact</h4>
+                        <span class="text-2xl font-bold text-green-500 font-hud">25%</span>
+                    </div>
+                    <div class="w-full h-2 bg-gray-800 rounded-full overflow-hidden">
+                        <div class="h-full bg-green-500" style="width: 25%"></div>
+                    </div>
+                    <p class="mt-2 text-sm text-gray-500 font-hud">Real-world applicability and business potential.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="prizes" class="py-32 relative bg-[var(--asphalt)]">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-20 gsap-reveal">
+                <span class="font-hud text-yellow-400 tracking-widest text-sm">THE FINISH LINE</span>
+                <h2 class="text-5xl md:text-7xl font-bold italic">PRIZES & <span class="text-white">REWARDS</span></h2>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8 items-end max-w-5xl mx-auto">
+                <div class="telemetry-card p-8 border-gray-400/50 order-2 md:order-1 hover:transform-none gsap-reveal">
+                    <div class="text-center mb-6">
+                        <div class="text-6xl font-black text-gray-600 mb-2">2</div>
+                        <h3 class="text-2xl font-bold text-gray-300">RUNNER UP</h3>
+                        <div class="text-3xl font-bold text-white font-hud mt-2">₹7,000</div>
+                    </div>
+                    <ul class="text-sm text-gray-400 font-hud space-y-2 border-t border-gray-700 pt-4">
+                        <li>+ Silver Certificate</li>
+                        <li>+ Tech Gadgets</li>
+                        <li>+ Swag Kit</li>
+                    </ul>
+                </div>
+
+                <div class="telemetry-card p-10 border-yellow-400 order-1 md:order-2 transform scale-110 shadow-[0_0_30px_rgba(250,204,21,0.2)] z-10 bg-black gsap-reveal">
+                    <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-yellow-400 text-black font-black px-4 py-1 rounded font-hud text-xs">CHAMPION</div>
+                    <div class="text-center mb-6">
+                        <div class="text-8xl font-black text-yellow-500/20 mb-[-40px]">1</div>
+                        <div class="text-6xl mb-4">🏆</div>
+                        <h3 class="text-3xl font-bold text-yellow-400 italic">WINNER</h3>
+                        <div class="text-5xl font-bold text-white font-hud mt-4">₹11,000</div>
+                    </div>
+                    <ul class="text-sm text-gray-300 font-hud space-y-3 border-t border-yellow-400/30 pt-6">
+                        <li class="font-bold text-yellow-400">★ Internship Opportunity</li>
+                        <li>+ Gold Certificate</li>
+                        <li>+ Premium Swag Kit</li>
+                        <li>+ Trophy</li>
+                    </ul>
+                </div>
+
+                <div class="telemetry-card p-8 border-orange-700/50 order-3 hover:transform-none gsap-reveal">
+                    <div class="text-center mb-6">
+                        <div class="text-6xl font-black text-orange-900/50 mb-2">3</div>
+                        <h3 class="text-2xl font-bold text-orange-400">2nd RUNNER UP</h3>
+                        <div class="text-3xl font-bold text-white font-hud mt-2">₹4,000</div>
+                    </div>
+                    <ul class="text-sm text-gray-400 font-hud space-y-2 border-t border-gray-700 pt-4">
+                        <li>+ Bronze Certificate</li>
+                        <li>+ Swag Kit</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="register" class="py-32 relative flex items-center justify-center bg-black overflow-hidden">
+        <div class="absolute inset-0 opacity-20" style="background-image: repeating-linear-gradient(45deg, #fff 25%, transparent 25%, transparent 75%, #fff 75%, #fff), repeating-linear-gradient(45deg, #fff 25%, #000 25%, #000 75%, #fff 75%, #fff); background-position: 0 0, 20px 20px; background-size: 40px 40px;"></div>
+        
+        <div class="container mx-auto px-6 relative z-10">
+             <div class="max-w-4xl mx-auto text-center bg-black/80 backdrop-blur-xl border border-white/10 p-12 rounded-3xl relative overflow-hidden group gsap-reveal">
+                 <div class="absolute inset-0 bg-gradient-to-r from-[var(--f1-red)]/10 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-0 transition-transform duration-700"></div>
+                 
+                 <h2 class="text-6xl font-black mb-6 italic uppercase relative z-10">Join The <span class="text-[var(--f1-red)]">Grid</span></h2>
+                 <p class="text-xl text-gray-300 mb-10 font-hud max-w-2xl mx-auto relative z-10">Registration closes soon. Secure your spot in the pit lane before the lights go out.</p>
+                 
+                 <div class="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
+                     <a href="#events" class="btn-race px-12 py-6 text-2xl skew-x-[-10deg] inline-block">
+                         <span class="inline-block skew-x-[10deg]">REGISTER NOW</span>
+                     </a>
+                     <button class="px-12 py-6 text-xl border border-white/20 text-white font-hud hover:bg-white/10 transition-all skew-x-[-10deg]">
+                        <span class="inline-block skew-x-[10deg]">CONTACT PIT WALL</span>
+                    </button>
+                 </div>
+             </div>
+        </div>
+    </section>
+
+    <footer class="border-t border-white/10 py-12 bg-[#0a0a0a]">
+        <div class="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center font-hud text-xs text-gray-500 gap-4">
+            <p>&copy; 2025 CODEBUSTERS RACING TEAM.</p>
+            <div class="flex gap-6">
+                <a href="#" class="hover:text-[var(--f1-red)]">INSTAGRAM</a>
+                <a href="#" class="hover:text-[var(--f1-red)]">LINKEDIN</a>
+                <a href="#" class="hover:text-[var(--f1-red)]">GITHUB</a>
+            </div>
+            <p>TELEMETRY: NORMAL // WEATHER: DRY</p>
+        </div>
+    </footer>
+
+    <script>
+        // Register GSAP ScrollTrigger
+        gsap.registerPlugin(ScrollTrigger);
+
+        // --- PRELOADER LOGIC ---
+        // 1. Initial State: Hide scrollbar
+        document.body.style.overflow = 'hidden';
+
+        const loaderTimeline = gsap.timeline();
+
+        // 2. Animate Lights turning Red one by one
+        loaderTimeline.to(".loader-light", {
+            backgroundColor: '#FF0000',
+            boxShadow: '0 0 30px #FF0000',
+            duration: 0.1,
+            stagger: 0.5,
+            delay: 0.5
+        })
+        // 3. Lights Out (All Green/Black instantly) - "GO!"
+        .to(".loader-light", {
+            backgroundColor: '#333',
+            boxShadow: 'none',
+            duration: 0.1,
+            delay: 0.8 // Wait a bit on full red
+        })
+        // 4. Fade out the whole preloader screen
+        .to("#preloader", {
+            opacity: 0,
+            duration: 0.5,
+            onComplete: () => {
+                // Remove preloader from view and enable scroll
+                document.getElementById("preloader").style.display = "none";
+                document.body.style.overflow = '';
+                
+                // 5. Trigger Hero Animations (only after loader is gone)
+                createWindParticles(); // TADKA
+                initAnimations();
+            }
+        });
+
+        // --- WIND TADKA FUNCTION ---
+        function createWindParticles() {
+            const container = document.body;
+            // Create 20 fast moving lines
+            for(let i=0; i<20; i++) {
+                let div = document.createElement('div');
+                // Tailwind classes for the particle
+                div.className = 'fixed h-[2px] bg-white/20 z-[9999] pointer-events-none rounded-full';
+                
+                // Random positioning
+                div.style.top = Math.random() * 100 + 'vh';
+                div.style.left = '-100vw'; // Start off screen left
+                div.style.width = Math.random() * 50 + 20 + 'vw'; // Random length
+                
+                container.appendChild(div);
+
+                // Animate zoom across screen
+                gsap.to(div, {
+                    x: '200vw', // Move way off screen right
+                    duration: 2.0 + Math.random() * 1.5, // SLOWER DURATION
+                    delay: Math.random() * 0.2,
+                    ease: "power2.out", // SMOOTHER EASE
+                    onComplete: () => div.remove() // Clean up DOM
+                });
+            }
+
+            // Flash effect on body
+            gsap.to("body", { 
+                backgroundColor: "#222", 
+                duration: 0.05, 
+                yoyo: true, 
+                repeat: 1, 
+                onComplete: () => gsap.set("body", { backgroundColor: "var(--carbon)" })
+            });
+        }
+
+
+        // --- SCROLL ANIMATION FUNCTION ---
+        // This function creates the dynamic "Fade In / Fade Out" effect
+        function makeAlive(selector) {
+            gsap.utils.toArray(selector).forEach(elem => {
+                gsap.fromTo(elem, 
+                    { y: 50, opacity: 0, scale: 0.95 }, // Start state (Hidden)
+                    {
+                        y: 0, 
+                        opacity: 1, 
+                        scale: 1,
+                        duration: 0.8, 
+                        ease: "power2.out",
+                        scrollTrigger: {
+                            trigger: elem,
+                            start: "top 85%", // Animation starts when top of element hits 85% of viewport
+                            end: "bottom 15%", // Animation ends/reverses when bottom hits 15% of viewport
+                            toggleActions: "play reverse play reverse", // Play on Enter, Reverse on Leave, Play on Enter Back, Reverse on Leave Back
+                        }
+                    }
+                );
+            });
+        }
+
+        // Initialize animations for all relevant sections
+        function initAnimations() {
+            // Hero Elements - WITH EXTRA TADKA (Skew & Scale)
+            gsap.fromTo(".reveal-hero", 
+                { y: 100, opacity: 0, skewX: -20, scale: 0.8 },
+                { y: 0, opacity: 1, skewX: 0, scale: 1, duration: 1, stagger: 0.1, ease: "power4.out" }
+            );
+
+            // Zoom out the background for speed effect
+            gsap.fromTo(".hero-clip",
+                { scale: 1.3, filter: "blur(10px)" },
+                { scale: 1, filter: "blur(0px)", duration: 1.5, ease: "power2.out" }
+            );
+            
+            // Cards
+            makeAlive(".telemetry-card");
+            
+            // Schedule Items
+            makeAlive(".schedule-item");
+            
+            // Grid Columns (About & BGMI sections)
+            makeAlive(".grid > div");
+            
+            // Register Section Container
+            makeAlive("#register .container > div");
+            
+            // Section Titles
+            makeAlive(".text-center");
+        }
+
+        // Schedule Line Animation (Specific case)
+        gsap.to("#progress-line", {
+            scrollTrigger: {
+                trigger: "#schedule",
+                start: "top center",
+                end: "bottom center",
+                scrub: 1
+            },
+            scaleY: 1,
+            ease: "none"
+        });
+
+        // Navbar Scroll Effect
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                nav.classList.add('py-2');
+                nav.classList.remove('py-4');
+            } else {
+                nav.classList.add('py-4');
+                nav.classList.remove('py-2');
+            }
+        });
+
+        // COUNTDOWN TIMER LOGIC
+        // COUNTDOWN TIMER LOGIC
+const eventDate = new Date("Apr 1, 2026 09:00:00").getTime();
+
+const timer = setInterval(function() {
+    const now = new Date().getTime();
+    const distance = eventDate - now;
+
+    if (distance < 0) {
+        clearInterval(timer);
+        // Timer khatam hone par yeh text dikhega
+        document.getElementById("countdown").innerHTML = "<div class='text-white font-hud text-3xl font-bold'>EVENT STARTED</div>";
+        return;
+    }
+
+    const d = Math.floor(distance / (1000 * 60 * 60 * 24));
+    const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+    const s = Math.floor((distance % (1000 * 60)) / 1000);
+
+    document.getElementById("days").innerText = d < 10 ? "0" + d : d;
+    document.getElementById("hours").innerText = h < 10 ? "0" + h : h;
+    document.getElementById("minutes").innerText = m < 10 ? "0" + m : m;
+    document.getElementById("seconds").innerText = s < 10 ? "0" + s : s;
+
+}, 1000);
+
+    </script>
+</body>
+</html>
